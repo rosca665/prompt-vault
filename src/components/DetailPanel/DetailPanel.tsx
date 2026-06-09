@@ -1,12 +1,19 @@
-import React from 'react';
-import { usePromptStore } from '@/store/promptStore';
+import React, { useState } from 'react';
+import { usePrompts } from '@/hooks/usePrompts';
 import { useUIStore } from '@/store/uiStore';
+import type { Prompt } from '@/types/prompt';
 import { formatDatetime, wordCount, charCount, estimatePromptTokens } from '@/utils';
+import CreatePromptModal from '../Modals/CreatePromptModal';
+import EditPromptModal from '../Modals/EditPromptModal';
+import DeleteConfirmDialog from '../Modals/DeleteConfirmDialog';
 import styles from './DetailPanel.module.css';
 
 const DetailPanel: React.FC = () => {
-  const { currentPrompt } = usePromptStore();
+  const { currentPrompt, updatePrompt: storeUpdatePrompt } = usePrompts();
   const { showToast } = useUIStore();
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const { deletePrompt, isLoading } = usePrompts();
 
   if (!currentPrompt) {
     return (
@@ -31,8 +38,26 @@ const DetailPanel: React.FC = () => {
     }
   };
 
-  const handleEdit = () => {
-    showToast('Edit feature coming in Phase 2', 'info');
+  const handleFavourite = async () => {
+    try {
+      await storeUpdatePrompt(currentPrompt.id, { favourite: !currentPrompt.favourite });
+      showToast(
+        currentPrompt.favourite ? 'Removed from favourites' : 'Added to favourites',
+        'success'
+      );
+    } catch {
+      showToast('Failed to update', 'error');
+    }
+  };
+
+  const handleDelete = async () => {
+    try {
+      await deletePrompt(currentPrompt.id);
+      setShowDeleteDialog(false);
+      showToast('Prompt deleted', 'success');
+    } catch {
+      showToast('Failed to delete', 'error');
+    }
   };
 
   return (
@@ -103,16 +128,41 @@ const DetailPanel: React.FC = () => {
 
       {/* Actions Footer */}
       <footer className={styles.footer}>
-        <button className={styles.btn} onClick={handleCopy}>
+        <button className={styles.btn} onClick={handleCopy} title="Copy prompt">
           📋 Copy
         </button>
-        <button className={styles.btn} onClick={handleEdit}>
+        <button className={styles.btn} onClick={() => setShowEditModal(true)} title="Edit prompt">
           ✏️ Edit
         </button>
-        <button className={styles.btn}>
-          {currentPrompt.favourite ? '★' : '☆'} Favourite
+        <button
+          className={`${styles.btn} ${currentPrompt.favourite ? styles.active : ''}`}
+          onClick={handleFavourite}
+          title={currentPrompt.favourite ? 'Remove from favourites' : 'Add to favourites'}
+        >
+          {currentPrompt.favourite ? '★' : '☆'} Fav
+        </button>
+        <button
+          className={`${styles.btn} ${styles.danger}`}
+          onClick={() => setShowDeleteDialog(true)}
+          title="Delete prompt"
+        >
+          🗑️ Delete
         </button>
       </footer>
+
+      {/* Modals */}
+      {showEditModal && (
+        <EditPromptModal prompt={currentPrompt} onClose={() => setShowEditModal(false)} />
+      )}
+
+      {showDeleteDialog && (
+        <DeleteConfirmDialog
+          title={currentPrompt.title}
+          onConfirm={handleDelete}
+          onCancel={() => setShowDeleteDialog(false)}
+          isLoading={isLoading}
+        />
+      )}
     </section>
   );
 };

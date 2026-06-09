@@ -1,18 +1,22 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { usePromptStore } from '@/store/promptStore';
+import React, { useCallback } from 'react';
+import { usePrompts } from '@/hooks/usePrompts';
 import { useUIStore } from '@/store/uiStore';
-import { useSearch } from '@/hooks/useSearch';
+import type { CreatePromptInput } from '@/types/prompt';
 import PromptList from './PromptList';
 import SearchBar from './SearchBar';
 import FilterChips from './FilterChips';
 import SortSelector from './SortSelector';
+import CreatePromptModal from '../Modals/CreatePromptModal';
 import styles from './MainPanel.module.css';
+import { useSearch } from '@/hooks/useSearch';
+import { useState, useEffect } from 'react';
 
 const MainPanel: React.FC = () => {
-  const { prompts, setCurrentPrompt } = usePromptStore();
+  const { prompts, setCurrentPrompt } = usePrompts();
   const { showToast } = useUIStore();
   const search = useSearch();
   const [displayedPrompts, setDisplayedPrompts] = useState(prompts);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   // Update displayed prompts when filters/sort changes
   useEffect(() => {
@@ -38,8 +42,8 @@ const MainPanel: React.FC = () => {
   );
 
   const handleNewPrompt = useCallback(() => {
-    showToast('New prompt feature coming in Phase 2', 'info');
-  }, [showToast]);
+    setShowCreateModal(true);
+  }, []);
 
   return (
     <section className={styles.mainPanel}>
@@ -71,6 +75,10 @@ const MainPanel: React.FC = () => {
           <PromptList prompts={displayedPrompts} onSelectPrompt={handleSelectPrompt} />
         )}
       </div>
+
+      {showCreateModal && (
+        <CreatePromptModal categoryId="" onClose={() => setShowCreateModal(false)} />
+      )}
     </section>
   );
 };
