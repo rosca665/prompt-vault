@@ -1,10 +1,7 @@
 import React, { useEffect } from 'react';
 import { useUIStore } from '@/store/uiStore';
 import { usePrompts } from '@/hooks/usePrompts';
-import Sidebar from './Sidebar';
-import MainPanel from './MainPanel';
-import DetailPanel from './DetailPanel';
-import Toast from '@/components/Common/Toast';
+import Layout from '@/components/Layout/Layout';
 import styles from './App.module.css';
 
 const App: React.FC = () => {
@@ -14,7 +11,11 @@ const App: React.FC = () => {
   // Apply theme to document
   useEffect(() => {
     const effectiveTheme =
-      theme === 'system' ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light') : theme;
+      theme === 'system'
+        ? window.matchMedia('(prefers-color-scheme: dark)').matches
+          ? 'dark'
+          : 'light'
+        : theme;
     document.documentElement.setAttribute('data-theme', effectiveTheme);
   }, [theme]);
 
@@ -31,12 +32,7 @@ const App: React.FC = () => {
 
   return (
     <div className={styles.app}>
-      <div className={styles.layout}>
-        <Sidebar />
-        <MainPanel />
-        <DetailPanel />
-      </div>
-      <Toast />
+      <Layout />
     </div>
   );
 };
